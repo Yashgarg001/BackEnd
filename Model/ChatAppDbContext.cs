@@ -16,6 +16,8 @@ public partial class ChatAppDbContext : DbContext
     }
 
     public virtual DbSet<User> Users { get; set; }
+    public virtual DbSet<Message> Messages { get; set; }
+
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
@@ -38,6 +40,29 @@ public partial class ChatAppDbContext : DbContext
             entity.Property(e => e.Password)
                 .HasMaxLength(50)
                 .IsUnicode(false);
+        });
+
+        // Configure Messages Entity
+        modelBuilder.Entity<Message>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Content)
+                  .IsRequired()
+                  .HasColumnType("VARCHAR(MAX)");
+
+            entity.Property(e => e.Timestamp)
+                  .HasDefaultValueSql("GETDATE()");
+
+            entity.HasOne<User>()
+                  .WithMany()
+                  .HasForeignKey(e => e.SenderId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne<User>()
+                  .WithMany()
+                  .HasForeignKey(e => e.ReceiverId)
+                  .OnDelete(DeleteBehavior.Restrict);
         });
 
         OnModelCreatingPartial(modelBuilder);

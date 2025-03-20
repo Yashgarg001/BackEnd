@@ -35,7 +35,7 @@ public class AuthController : ControllerBase
     {
         if (await _context.Users.AnyAsync(u => u.Email == request.Email))
         {
-            return BadRequest("Username already exists");
+            return BadRequest("Email already exists");
         }
 
         var user = new User
@@ -51,5 +51,14 @@ public class AuthController : ControllerBase
         // ✅ Pass both user ID and username
         var token = _jwtService.GenerateToken(user.Id, user.Email);
         return Ok(new { token });
+    }
+    [HttpGet("users")]
+    public async Task<IActionResult> GetAllUsers()
+    {
+        var users = await _context.Users
+            .Select(u => new { u.Id, u.Name, u.Email })
+            .ToListAsync();
+
+        return Ok(users);
     }
 }

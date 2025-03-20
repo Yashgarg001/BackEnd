@@ -1,9 +1,13 @@
+using ChatAppBackEnd.Data;
+using ChatAppBackEnd.Hubs;
 using ChatAppBackEnd.Model;
+using ChatAppBackEnd.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.WebSockets;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,12 +15,24 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
+// Add SignalR
+builder.Services.AddSignalR();
+
+// ? Register ChatService
+builder.Services.AddScoped<ChatService>();
 
 // ? Load JWT Configuration
 
 // ? Configure Entity Framework and Database Connection
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 builder.Services.AddDbContext<ChatAppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<ChatService>();
+
+
 
 // ? Configure JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtConfig");
@@ -97,7 +113,10 @@ app.UseAuthentication(); // ? Authentication Middleware
 app.UseAuthorization(); // ? Authorization Middleware
 
 // ? Map Controllers
+
 app.MapControllers();
+
+app.MapHub<ChatHub>("/chatHub");
 
 // ? Run the app
 app.Run();
